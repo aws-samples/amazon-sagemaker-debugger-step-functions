@@ -1,0 +1,72 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:ListBucket",
+                "s3:PutObject",
+                "s3:GetObject",
+                "s3:AbortMultipartUpload",
+                "s3:GetBucketLocation",
+                "s3:ListAllMyBuckets",
+                "s3:GetBucketCors",
+                "s3:PutBucketCors"
+            ],
+            "Resource": "arn:aws:s3::*:*-sagemaker-debugger-model-automation*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "sagemaker:DescribeTrainingJob",
+                "sagemaker:StopTrainingJob",
+                "sagemaker:CreateTrainingJob",
+                "sagemaker:StopProcessingJob",
+                "sagemaker:DescribeProcessingJob",
+                "sagemaker:ListTrainingJobs",
+                "sagemaker:ListProcessingJobs"
+            ],
+            "Resource": [
+                "arn:aws:sagemaker:*:*:training-job/complex-resnet-model-*",
+                "arn:aws:sagemaker:*:*:processing-job/complex-resnet-model-*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "sns:Publish"
+            ],
+            "Resource": "arn:aws:sns:*:*:SMDebugRules"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "iam:PassRole"
+            ],
+            "Resource": "arn:aws:iam::*:role/lambda-sagemaker-train"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "logs:CreateLogDelivery",
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:DeleteLogDelivery",
+                "logs:Describe*",
+                "logs:GetLogDelivery",
+                "logs:GetLogEvents",
+                "logs:ListLogDeliveries",
+                "logs:PutLogEvents",
+                "logs:PutResourcePolicy",
+                "logs:UpdateLogDelivery",
+                "cloudwatch:DescribeAlarms",
+                "cloudwatch:GetMetricData",
+                "cloudwatch:GetMetricStatistics",
+                "cloudwatch:ListMetrics",
+                "cloudwatch:PutMetricAlarm",
+                "cloudwatch:PutMetricData"
+            ],
+            "Resource": "*"
+        }
+    ]
+}

@@ -1,0 +1,229 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+    SagemakerNotebookPolicy:
+        Type: AWS::IAM::ManagedPolicy
+        Properties:
+            # ManagedPolicyName: 'sagemaker-debugger-notebook-execution'
+            PolicyDocument:
+              {
+                "Version": "2012-10-17",
+                "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "lambda:CreateFunction",
+                    "lambda:UpdateFunctionCode",
+                    "lambda:DeleteFunction"
+                  ],
+                  "Resource": [
+                    "arn:aws:lambda:*:*:function:monitor",
+                    "arn:aws:lambda:*:*:function:launch_training_job"
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "states:CreateStateMachine",
+                    "states:DeleteStateMachine",
+                    "states:UpdateStateMachine",
+                    "states:DescribeExecution",
+                    "states:GetExecutionHistory",
+                    "states:StartExecution",
+                    "states:StopExecution"
+                  ],
+                  "Resource": [
+                    "arn:aws:states:*:*:stateMachine:sagemaker-model-dev-workflow-with-debugger",
+                    "arn:aws:states:*:*:execution:sagemaker-model-dev-workflow-with-debugger"
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "sns:CreateTopic",
+                    "sns:DeleteTopic",
+                    "sns:Publish",
+                    "sns:Subscribe"
+                  ],
+                  "Resource": [
+                    "arn:aws:sns:*:*:SMDebugRules"
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "cloudformation:DeleteStack"
+                  ],
+                  "Resource": [
+                    "arn:aws:cloudformation:*:*:stack/debugger-cft-stack*"
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:ListBucketVersions",
+                    "s3:DeleteBucket",
+                    "s3:DeleteObject"
+                  ],
+                  "Resource": [
+                    "arn:aws:s3::*:*-sagemaker-debugger-model-automation*"
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "iam:PassRole",
+                    "iam:DetachRolePolicy",
+                    "iam:DeleteRole",
+                    "iam:DeletePolicy",
+                    "iam:GetPolicy",
+                    "iam:GetPolicyVersions",
+                    "iam:ListPolicyVersions",
+                    "iam:ListPolicies"
+                  ],
+                  "Resource": [
+                    "arn:aws:iam::*:role/lambda-sagemaker-train",
+                    "arn:aws:iam::*:role/step-function-basic-role",
+                    "arn:aws:iam::*:role/sagemaker-debugger-notebook-execution",
+                    "arn:aws:iam::*:policy/debugger-cft-stack-*"
+                  ]
+                }
+                ]
+              }
+
+    LambdaPolicy:
+        Type: AWS::IAM::ManagedPolicy
+        Properties:
+            #ManagedPolicyName: 'lambda-sagemaker-train'
+            PolicyDocument: {
+              "Version": "2012-10-17",
+              "Statement": [
+                  {
+                      "Effect": "Allow",
+                      "Action": [
+                          "s3:ListBucket",
+                          "s3:PutObject",
+                          "s3:GetObject",
+                          "s3:AbortMultipartUpload",
+                          "s3:GetBucketLocation",
+                          "s3:ListAllMyBuckets",
+                          "s3:GetBucketCors",
+                          "s3:PutBucketCors"
+                      ],
+                      "Resource": "arn:aws:s3::*:*-sagemaker-debugger-model-automation*"
+                  },
+                  {
+                      "Effect": "Allow",
+                      "Action": [
+                          "sagemaker:DescribeTrainingJob",
+                          "sagemaker:StopTrainingJob",
+                          "sagemaker:CreateTrainingJob",
+                          "sagemaker:StopProcessingJob",
+                          "sagemaker:DescribeProcessingJob",
+                          "sagemaker:ListTrainingJobs",
+                          "sagemaker:ListProcessingJobs"
+                      ],
+                      "Resource": [
+                          "arn:aws:sagemaker:*:*:training-job/complex-resnet-model-*",
+                          "arn:aws:sagemaker:*:*:processing-job/complex-resnet-model-*"
+                      ]
+                  },
+                  {
+                      "Effect": "Allow",
+                      "Action": [
+                          "sns:Publish"
+                      ],
+                      "Resource": "arn:aws:sns:*:*:SMDebugRules"
+                  },
+                  {
+                      "Effect": "Allow",
+                      "Action": [
+                          "iam:PassRole"
+                      ],
+                      "Resource": "arn:aws:iam::*:role/lambda-sagemaker-train"
+                  },
+                  {
+                      "Effect": "Allow",
+                      "Action": [
+                          "logs:CreateLogDelivery",
+                          "logs:CreateLogGroup",
+                          "logs:CreateLogStream",
+                          "logs:DeleteLogDelivery",
+                          "logs:Describe*",
+                          "logs:GetLogDelivery",
+                          "logs:GetLogEvents",
+                          "logs:ListLogDeliveries",
+                          "logs:PutLogEvents",
+                          "logs:PutResourcePolicy",
+                          "logs:UpdateLogDelivery",
+                          "cloudwatch:DescribeAlarms",
+                          "cloudwatch:GetMetricData",
+                          "cloudwatch:GetMetricStatistics",
+                          "cloudwatch:ListMetrics",
+                          "cloudwatch:PutMetricAlarm",
+                          "cloudwatch:PutMetricData"
+                      ],
+                      "Resource": "*"
+                  }
+              ]
+          }
+
+    SagemakerNotebookRole:
+        Type: AWS::IAM::Role
+        Properties:
+            RoleName: 'sagemaker-debugger-notebook-execution'
+            ManagedPolicyArns:
+              - 'arn:aws:iam::aws:policy/AmazonSageMakerFullAccess'
+              - !Ref SagemakerNotebookPolicy
+            AssumeRolePolicyDocument:
+                Version: 2012-10-17
+                Statement:
+                  - Effect: Allow
+                    Principal:
+                      Service:
+                      - sagemaker.amazonaws.com
+                    Action:
+                      - 'sts:AssumeRole'
+
+
+    SagemakerNotebook:
+        Type: AWS::SageMaker::NotebookInstance
+        Properties:
+            DefaultCodeRepository: 'https://github.com/aws-samples/amazon-sagemaker-debugger-step-functions.git'
+            InstanceType: 'ml.t3.medium'
+            NotebookInstanceName: 'sagemaker-debugger-auto-model-development'
+            RoleArn: !GetAtt SagemakerNotebookRole.Arn
+            VolumeSizeInGB: 5
+
+
+    StepFunctionsRole:
+        Type: AWS::IAM::Role
+        Properties:
+            RoleName: 'step-function-basic-role'
+            ManagedPolicyArns:
+              - 'arn:aws:iam::aws:policy/service-role/AWSLambdaRole'
+            AssumeRolePolicyDocument:
+                Version: 2012-10-17
+                Statement:
+                  - Effect: Allow
+                    Principal:
+                      Service:
+                      - states.amazonaws.com
+                    Action:
+                      - 'sts:AssumeRole'
+
+    LambdaRole:
+        Type: AWS::IAM::Role
+        Properties:
+            RoleName: 'lambda-sagemaker-train'
+            ManagedPolicyArns:
+              - !Ref LambdaPolicy
+            AssumeRolePolicyDocument:
+                Version: 2012-10-17
+                Statement:
+                  - Effect: Allow
+                    Principal:
+                      Service:
+                      - lambda.amazonaws.com
+                      - sagemaker.amazonaws.com
+                    Action:
+                      - 'sts:AssumeRole'

@@ -1,0 +1,84 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "lambda:CreateFunction",
+                "lambda:UpdateFunctionCode",
+                "lambda:DeleteFunction"
+            ],
+            "Resource": [
+                "arn:aws:lambda:*:*:function:monitor",
+                "arn:aws:lambda:*:*:function:launch_training_job"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "states:CreateStateMachine",
+                "states:DeleteStateMachine",
+                "states:UpdateStateMachine",
+                "states:DescribeExecution",
+                "states:GetExecutionHistory",
+                "states:StartExecution",
+                "states:StopExecution"
+            ],
+            "Resource": [
+                "arn:aws:states:*:*:stateMachine:sagemaker-model-dev-workflow-with-debugger",
+                "arn:aws:states:*:*:execution:sagemaker-model-dev-workflow-with-debugger"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "sns:CreateTopic",
+                "sns:DeleteTopic",
+                "sns:Publish",
+                "sns:Subscribe"
+            ],
+            "Resource": [
+                "arn:aws:sns:*:*:SMDebugRules"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "cloudformation:DeleteStack"
+            ],
+            "Resource": [
+                "arn:aws:cloudformation:*:*:stack/debugger-cft-stack*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:ListBucketVersions",
+                "s3:DeleteBucket",
+                "s3:DeleteObject"
+            ],
+            "Resource": [
+                "arn:aws:s3::*:*-sagemaker-debugger-model-automation*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "iam:PassRole",
+                "iam:GetPolicy",
+                "iam:DetachRolePolicy",
+                "iam:DeleteRole",
+                "iam:DeletePolicy",
+                "iam:GetPolicyVersions",
+                "iam:ListPolicyVersions",
+                "iam:ListPolicies"
+            ],
+            "Resource": [
+                "arn:aws:iam::*:role/lambda-sagemaker-train",
+                "arn:aws:iam::*:role/step-function-basic-role",
+                "arn:aws:iam::*:role/sagemaker-debugger-notebook-execution",
+                "arn:aws:iam::*:policy/debugger-cft-stack-*"
+            ]
+        }
+    ]
+}

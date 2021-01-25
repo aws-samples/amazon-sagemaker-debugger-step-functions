@@ -1,0 +1,7 @@
+data/
+__pycache__
+.ipynb_checkpoints/
+*.zip
+*.tar.gz
+.idea/
+.DS_Store
